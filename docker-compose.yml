@@ -1,0 +1,39 @@
+version: "3.1"
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: quicker-mysql
+    volumes:
+      - ./dbdata:/var/lib/mysql:rw
+    user: mysql
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ALLOW_EMPTY_PASSWORD=true
+    ports:
+      - "${MYSQL_PORT}:3306"
+
+  webserver:
+    build: config/nginx
+    container_name: quicker-webserver
+    hostname: ${HOSTNAME}
+    working_dir: /application
+    volumes:
+      - ${APP_DIR}:/application
+      - ./config/nginx/nginx.conf:/etc/nginx/conf.d/default.conf
+    environment:
+      - HOSTNAME=${HOSTNAME}
+    ports:
+      - "${WEB_SERVER_PORT}:80"
+      - "${WEB_SERVER_SSL_PORT}:443"
+
+  php-fpm:
+    build: config/php-fpm
+    container_name: quicker-php-fpm
+    working_dir: /application
+    volumes:
+      - ${APP_DIR}:/application
+      - ./config/php-fpm/php-ini-overrides.ini:/etc/php/7.2/fpm/conf.d/99-overrides.ini
+    environment:
+      - HOSTNAME=${HOSTNAME}
